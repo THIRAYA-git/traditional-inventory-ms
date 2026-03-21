@@ -100,7 +100,7 @@ The project was built as a personal QA learning environment and has undergone ex
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/THIRAYA-git/inventory-management-system-html-css-js-php-mysql-bootstrap-.git
+git clone https://github.com/THIRAYA-git/traditional-inventory-ms
 
 # 2. Move to XAMPP htdocs
 cp -r traditional-inventory-ms/ /xampp/htdocs/

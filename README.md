@@ -129,7 +129,7 @@ cp -r traditional-inventory-ms/ /xampp/htdocs/
 ## 📁 Project Structure
 
 ```
-inventory-management-system-html-css-js-php-mysql-bootstrap-/
+traditional-inventory-ms/
 ├── admin/                          # All admin panel pages (dashboard, products, invoices, etc.)
 ├── employee/                       # Staff/employee role views
 ├── core/                           # Core logic and helpers

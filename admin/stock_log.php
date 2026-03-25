@@ -34,11 +34,53 @@ $logs = $db->query($query)->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <style>
-    .content-area { width: 100%; padding: 25px; margin-left: 250px; }
-    .table-card { background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; }
+    :root {
+        --sl-bg: #f1f5f9;
+        --sl-card: #ffffff;
+        --sl-text: #1e293b;
+        --sl-border: #e2e8f0;
+        --sl-muted: #64748b;
+        --sl-input-bg: #ffffff;
+    }
+    [data-theme="dark"] {
+        --sl-bg: #0f172a;
+        --sl-card: rgba(30, 41, 59, 0.75);
+        --sl-text: #ffffff;
+        --sl-border: rgba(255, 255, 255, 0.15);
+        --sl-muted: #94a3b8;
+        --sl-input-bg: rgba(30, 41, 59, 0.9);
+    }
+
+    .content-area { width: 100%; padding: 25px; margin-left: 250px; background: var(--sl-bg); }
+    .table-card { background: var(--sl-card); border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; border: 1px solid var(--sl-border); transition: background 0.3s ease, border-color 0.3s ease; }
+    [data-theme="dark"] .table-card { backdrop-filter: blur(12px); }
+    
+    .page-title { color: var(--sl-text); }
+    .search-input-group .input-group-text { background: var(--sl-input-bg); border: 1px solid var(--sl-border); transition: background 0.3s ease, border-color 0.3s ease; }
+    .search-input-group .form-control { background: var(--sl-input-bg); border: 1px solid var(--sl-border); color: var(--sl-text); transition: background 0.3s ease, border-color 0.3s ease; }
+    [data-theme="dark"] .search-input-group .form-control::placeholder { color: var(--sl-muted); }
+    [data-theme="dark"] .search-input-group .form-control:focus { background: var(--sl-input-bg); color: #ffffff; }
     
     /* Status Badge Colors */
     .badge-transfer { background-color: #0dcaf0; color: #000; }
+    
+    /* Table Styles */
+    .table-dark-custom { background: var(--sl-card); }
+    [data-theme="dark"] .table-dark-custom thead th {
+        background-color: rgba(0, 0, 0, 0.4) !important;
+        border-bottom: 1px solid var(--sl-border) !important;
+        color: #ffffff !important;
+    }
+    [data-theme="dark"] #historyTable td {
+        background-color: rgba(255, 255, 255, 0.02) !important;
+        border-bottom: 1px solid var(--sl-border) !important;
+        color: var(--sl-text) !important;
+    }
+    [data-theme="dark"] #historyTable tbody tr:hover td {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
+    .table-text { color: var(--sl-text); }
+    .table-muted { color: var(--sl-muted); }
     
     @media print {
         .no-print, .sidebar, .navbar, .btn, .input-group, form { display: none !important; }
@@ -46,7 +88,6 @@ $logs = $db->query($query)->fetchAll(PDO::FETCH_ASSOC);
         .table { width: 100% !important; border: 1px solid #000; }
     }
 
-    /* Mobile responsiveness for the main content area */
     @media screen and (max-width: 992px) {
         .content-area { margin-left: 0 !important; padding: 15px !important; }
     }
@@ -55,10 +96,10 @@ $logs = $db->query($query)->fetchAll(PDO::FETCH_ASSOC);
 <div class="content-area">
     <div class="container-fluid p-0">
         <div class="row mb-4 align-items-center no-print">
-            <div class="col-md-3"><h2 class="m-0">Stock History</h2></div>
+            <div class="col-md-3"><h2 class="m-0 page-title">Stock History</h2></div>
             <div class="col-md-4">
-                <div class="input-group shadow-sm">
-                    <span class="input-group-text bg-white"><i class="fas fa-search text-muted"></i></span>
+                <div class="input-group shadow-sm search-input-group">
+                    <span class="input-group-text"><i class="fas fa-search table-muted"></i></span>
                     <input type="text" id="logSearch" class="form-control" placeholder="Search history...">
                 </div>
             </div>
@@ -76,7 +117,7 @@ $logs = $db->query($query)->fetchAll(PDO::FETCH_ASSOC);
         <div class="table-card">
             <div class="table-responsive">
                 <table class="table table-hover mb-0" id="historyTable" style="width: 100%;">
-                    <thead class="table-dark">
+                    <thead class="table-dark table-dark-custom">
                         <tr>
                             <th style="padding: 15px;">Date & Time</th>
                             <th>Product</th>
@@ -89,23 +130,23 @@ $logs = $db->query($query)->fetchAll(PDO::FETCH_ASSOC);
                     <tbody>
                         <?php if (empty($logs)): ?>
                             <tr>
-                                <td colspan="6" class="text-center py-4 text-muted">No stock history found.</td>
+                                <td colspan="6" class="text-center py-4 table-muted">No stock history found.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach($logs as $log): ?>
                             <tr>
-                                <td class="text-nowrap">
+                                <td class="text-nowrap table-text">
                                     <?= date('M d, Y | H:i', strtotime($log['created_at'])) ?>
                                 </td>
-                                <td><strong><?= htmlspecialchars($log['product_name']) ?></strong></td>
+                                <td class="table-text"><strong><?= htmlspecialchars($log['product_name']) ?></strong></td>
                                 <td>
                                     <span class="badge badge-transfer">
                                         <?= ucfirst(htmlspecialchars($log['transaction_type'])) ?>
                                     </span>
                                 </td>
-                                <td><?= htmlspecialchars($log['from_warehouse_name']) ?></td>
-                                <td><?= htmlspecialchars($log['to_warehouse_name']) ?></td>
-                                <td class="fw-bold text-primary"><?= number_format($log['quantity']) ?></td>
+                                <td class="table-text"><?= htmlspecialchars($log['from_warehouse_name']) ?></td>
+                                <td class="table-text"><?= htmlspecialchars($log['to_warehouse_name']) ?></td>
+                                <td class="fw-bold table-text"><?= number_format($log['quantity']) ?></td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>

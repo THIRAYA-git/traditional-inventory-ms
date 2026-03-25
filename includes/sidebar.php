@@ -100,6 +100,11 @@
         background: #262a2e !important;
     }
 
+    .components .dropdown-container li.active a {
+        background: var(--sidebar-active) !important;
+        color: #fff !important;
+    }
+
     .chevron {
         margin-left: auto;
         transition: transform 0.3s;
@@ -204,11 +209,11 @@
                         <i class="fas fa-warehouse"></i> Warehouse
                         <i class="fas fa-chevron-down chevron"></i>
                     </button>
-                    <ul class="dropdown-container">
-                        <li><a href="<?= $root_path ?>admin/transfer_stock.php">Transfer Stock</a></li>
-                        <li><a href="<?= $root_path ?>admin/warehouse_report.php">Stock Report</a></li>
-                        <li><a href="<?= $root_path ?>admin/stock_log.php">Stock Log</a></li>
-                        <li><a href="<?= $root_path ?>admin/stock_adjustment.php">Edit stock levels</a></li>
+                    <ul class="dropdown-container" <?= in_array($current_page, $warehouse_pages) ? 'style="display: block;"' : '' ?>>
+                        <li class="<?= $current_page === 'transfer_stock.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/transfer_stock.php">Transfer Stock</a></li>
+                        <li class="<?= $current_page === 'warehouse_report.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/warehouse_report.php">Stock Report</a></li>
+                        <li class="<?= $current_page === 'stock_log.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/stock_log.php">Stock Log</a></li>
+                        <li class="<?= $current_page === 'stock_adjustment.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/stock_adjustment.php">Edit stock levels</a></li>
                     </ul>
                 </li>
 
@@ -218,27 +223,27 @@
                         <i class="fas fa-shopping-cart"></i> Sales
                         <i class="fas fa-chevron-down chevron"></i>
                     </button>
-                    <ul class="dropdown-container">
-                        <li><a href="<?= $root_path ?>admin/products.php">Products</a></li>
-                        <li><a href="<?= $root_path ?>admin/generate_barcodes.php">Print labels / Barcode generator</a></li>
-                        <li><a href="<?= $root_path ?>admin/categories.php">Categories (Product)</a></li>
-                        <li><a href="<?= $root_path ?>admin/orders.php">Sales orders</a></li>
+                    <ul class="dropdown-container" <?= in_array($current_page, $sales_pages) ? 'style="display: block;"' : '' ?>>
+                        <li class="<?= $current_page === 'products.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/products.php">Products</a></li>
+                        <li class="<?= $current_page === 'generate_barcodes.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/generate_barcodes.php">Print labels / Barcode generator</a></li>
+                        <li class="<?= $current_page === 'categories.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/categories.php">Categories (Product)</a></li>
+                        <li class="<?= $current_page === 'orders.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/orders.php">Sales orders</a></li>
                     </ul>
                 </li>
 
-                <?php $purchase_pages = ['purchase_orders.php', 'suppliers.php']; ?>
+                <?php $purchase_pages = ['purchase_orders.php', 'suppliers.php', 'create_po.php']; ?>
                 <li>
                     <button class="dropdown-btn <?= in_array($current_page, $purchase_pages) ? 'active' : '' ?>">
                         <i class="fas fa-shopping-basket"></i> Purchase
                         <i class="fas fa-chevron-down chevron"></i>
                     </button>
-                    <ul class="dropdown-container">
-                        <li><a href="<?= $root_path ?>admin/purchase_orders.php">Purchase order</a></li>
-                        <li><a href="<?= $root_path ?>admin/suppliers.php">Suppliers</a></li>
+                    <ul class="dropdown-container" <?= in_array($current_page, $purchase_pages) ? 'style="display: block;"' : '' ?>>
+                        <li class="<?= $current_page === 'create_po.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/create_po.php">New Purchase</a></li>
+                        <li class="<?= $current_page === 'purchase_orders.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/purchase_orders.php">Purchase Status</a></li>
+                        <li class="<?= $current_page === 'suppliers.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/suppliers.php">Suppliers</a></li>
                     </ul>
                 </li>
 <?php
-            // Add your new invoice pages to the tracking array
             $invoice_pages = ['sales_invoices_print.php', 'purchase_invoices_print.php'];
             ?>
 
@@ -247,15 +252,15 @@
                     <i class="fas fa-file-invoice"></i> Invoices
                     <i class="fas fa-chevron-down chevron"></i>
                 </button>
-                <ul class="dropdown-container" style="<?= in_array($current_page, $invoice_pages) ? 'display: block;' : '' ?>">
-                    <li>
+                <ul class="dropdown-container" <?= in_array($current_page, $invoice_pages) ? 'style="display: block;"' : '' ?>>
+                    <li class="<?= $current_page === 'sales_invoices_print.php' ? 'active' : '' ?>">
                         <a href="<?= $root_path ?>admin/sales_invoices_print.php">
                             Sales Invoices
                         </a>
                     </li>
-                    <li>
+                    <li class="<?= $current_page === 'purchase_invoices_print.php' ? 'active' : '' ?>">
                         <a href="<?= $root_path ?>admin/purchase_invoices_print.php">
-                            </i> Purchase Invoices
+                            Purchase Invoices
                         </a>
                     </li>
                 </ul>
@@ -289,15 +294,23 @@
     /* Dropdown logic with persistency */
     var dropdown = document.getElementsByClassName("dropdown-btn");
     for (var i = 0; i < dropdown.length; i++) {
-        // Maintain open state if active
-        if (dropdown[i].classList.contains('active')) {
-            dropdown[i].nextElementSibling.style.display = "block";
-        }
-
         dropdown[i].addEventListener("click", function() {
             this.classList.toggle("active");
             var dropdownContent = this.nextElementSibling;
             dropdownContent.style.display = (dropdownContent.style.display === "block") ? "none" : "block";
         });
     }
+
+    // Keep dropdown open if a submenu item is active
+    var dropdownContainers = document.querySelectorAll('.dropdown-container');
+    dropdownContainers.forEach(function(container) {
+        var activeItems = container.querySelectorAll('li.active');
+        if (activeItems.length > 0) {
+            container.style.display = "block";
+            var btn = container.previousElementSibling;
+            if (btn && btn.classList.contains('dropdown-btn')) {
+                btn.classList.add('active');
+            }
+        }
+    });
 </script>

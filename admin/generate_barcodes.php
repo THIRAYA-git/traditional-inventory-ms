@@ -10,7 +10,7 @@ $products = $pdo->query("SELECT name, SKU, barcode FROM products WHERE barcode I
 <div class="content-area">
     <div class="container-fluid">
         <div class="d-flex justify-content-between align-items-center mb-4 no-print">
-            <h2 class="h3">Barcode Label Generator</h2>
+            <h2 class="h3 page-title">Barcode Label Generator</h2>
             <div>
                 <a href="assign_barcodes.php" class="btn btn-success mr-2">
                     <i class="fas fa-magic"></i> Auto-Generate Missing
@@ -27,20 +27,21 @@ $products = $pdo->query("SELECT name, SKU, barcode FROM products WHERE barcode I
         <div class="row">
             <?php if (count($products) > 0): ?>
                 <?php foreach ($products as $p): ?>
-                    <div class="col-3 mb-4"> <div class="card text-center shadow-sm p-3 h-100">
-                            <h6 class="mb-1 text-truncate" title="<?php echo htmlspecialchars($p['name']); ?>">
+                    <div class="col-3 mb-4">
+                        <div class="barcode-card card text-center shadow-sm p-3 h-100">
+                            <h6 class="mb-1 text-truncate card-title" title="<?php echo htmlspecialchars($p['name']); ?>">
                                 <?php echo htmlspecialchars($p['name']); ?>
                             </h6>
-                            <small class="text-muted d-block mb-2">
-        SKU: <?php echo !empty($p['SKU']) ? htmlspecialchars($p['SKU']) : 'N/A'; ?>
-    </small>
-                            
+                            <small class="d-block mb-2 card-sku">
+                                SKU: <?php echo !empty($p['SKU']) ? htmlspecialchars($p['SKU']) : 'N/A'; ?>
+                            </small>
+                             
                             <div class="barcode-wrapper py-2">
                                 <img src="https://bwipjs-api.metafloor.com/?bcid=ean13&text=<?php echo urlencode($p['barcode']); ?>&scale=2&height=10&includetext" 
                                      alt="Barcode" class="img-fluid">
                             </div>
                             
-                            <div class="mt-2 small font-weight-bold">
+                            <div class="mt-2 small fw-bold barcode-number">
                                 <?php echo htmlspecialchars($p['barcode']); ?>
                             </div>
                         </div>
@@ -56,6 +57,59 @@ $products = $pdo->query("SELECT name, SKU, barcode FROM products WHERE barcode I
 </div>
 
 <style>
+    :root {
+        --bc-bg: #f1f5f9;
+        --bc-card: #ffffff;
+        --bc-card-border: #e2e8f0;
+        --bc-text: #1e293b;
+        --bc-text-muted: #64748b;
+        --bc-barcode-text: #374151;
+    }
+    [data-theme="dark"] {
+        --bc-bg: #0f172a;
+        --bc-card: rgba(30, 41, 59, 0.85);
+        --bc-card-border: rgba(255, 255, 255, 0.12);
+        --bc-text: #ffffff;
+        --bc-text-muted: #94a3b8;
+        --bc-barcode-text: #e2e8f0;
+    }
+
+    .content-area {
+        background: var(--bc-bg);
+        transition: background 0.3s ease;
+    }
+
+    .page-title { color: var(--bc-text); }
+
+    .barcode-card {
+        background: var(--bc-card);
+        border: 1px solid var(--bc-card-border);
+        transition: background 0.3s ease, border-color 0.3s ease;
+    }
+    [data-theme="dark"] .barcode-card {
+        backdrop-filter: blur(12px);
+    }
+
+    .barcode-card .card-title {
+        color: var(--bc-text);
+    }
+    .barcode-card .card-sku {
+        color: var(--bc-text-muted);
+    }
+    .barcode-card .barcode-number {
+        color: var(--bc-barcode-text);
+    }
+
+    .barcode-wrapper {
+        background: #ffffff;
+        padding: 8px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+    [data-theme="dark"] .barcode-wrapper {
+        background: #ffffff;
+    }
+
 /* Optimization for standard A4 Paper printing */
 @media print {
     /* Hide UI elements */
@@ -85,10 +139,11 @@ $products = $pdo->query("SELECT name, SKU, barcode FROM products WHERE barcode I
     }
 
     /* Professional Card Borders for cutting */
-    .card {
+    .barcode-card {
         border: 1px solid #ddd !important;
         box-shadow: none !important;
         break-inside: avoid;
+        background: #ffffff !important;
     }
 }
 </style>

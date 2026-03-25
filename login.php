@@ -34,9 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user_id'] = $user['User_ID'];
                 $_SESSION['user_name'] = $user['Name'];
                 $_SESSION['user_role'] = $user['Role'];
+                $_SESSION['login_time'] = time();
 
-                $dbRole = strtolower(trim($user['Role'])); 
+                $dbRole = strtolower(trim($user['Role']));
 
+                echo "<script>
+                sessionStorage.setItem('session_fp', '" . md5($user['User_ID'] . $user['Role'] . $_SERVER['HTTP_USER_AGENT']) . "');
+                sessionStorage.setItem('session_init', '1');
+                </script>";
+                
                 if ($dbRole === 'admin') {
                     header('Location: admin/dashboard.php');
                     exit;

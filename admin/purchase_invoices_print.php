@@ -4,7 +4,6 @@ $pdo = connectDB();
 
 $search = $_GET['search'] ?? '';
 
-// Comprehensive Query: Joins Suppliers and Products to show detailed purchase summaries
 $query = "
     SELECT 
         po.PO_ID, 
@@ -29,22 +28,49 @@ $stmt->execute(["%$search%", "%$search%", "%$search%"]);
 $invoices = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
-<html>
+<html data-theme="light">
 <head>
     <title>Purchase Invoices Management</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fc; padding: 20px; color: #333; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); max-width: 1300px; margin: auto; }
+        :root {
+            --inv-bg: #f8f9fc;
+            --inv-container: #ffffff;
+            --inv-text: #333333;
+            --inv-text-muted: #858796;
+            --inv-border: #e3e6f0;
+            --inv-hover: #f8f9fc;
+            --inv-input-bg: #ffffff;
+            --inv-input-border: #d1d3e2;
+        }
+        [data-theme="dark"] {
+            --inv-bg: #0f172a;
+            --inv-container: rgba(30, 41, 59, 0.9);
+            --inv-text: #ffffff;
+            --inv-text-muted: #a0aec0;
+            --inv-border: rgba(255, 255, 255, 0.15);
+            --inv-hover: rgba(255, 255, 255, 0.05);
+            --inv-input-bg: rgba(30, 41, 59, 0.9);
+            --inv-input-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--inv-bg); padding: 20px; color: var(--inv-text); transition: background 0.3s ease, color 0.3s ease; }
+        .container { background: var(--inv-container); padding: 30px; border-radius: 12px; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15); max-width: 1300px; margin: auto; border: 1px solid var(--inv-border); transition: background 0.3s ease, border-color 0.3s ease; }
+        [data-theme="dark"] .container { backdrop-filter: blur(12px); }
         
         .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
-        .search-box input { padding: 10px; width: 300px; border: 1px solid #d1d3e2; border-radius: 4px; outline: none; }
+        .page-title { color: #4e73df; margin: 0; transition: color 0.3s ease; }
         
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th, td { padding: 12px 15px; border-bottom: 1px solid #e3e6f0; text-align: left; }
-        th { background: #4e73df; color: white; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
-        tr:hover { background-color: #f8f9fc; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-box input { padding: 10px; width: 300px; border: 1px solid var(--inv-input-border); border-radius: 4px; outline: none; background: var(--inv-input-bg); color: var(--inv-text); transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
+        
+        table { width: 100%; border-collapse: collapse; background: var(--inv-container); transition: background 0.3s ease; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid var(--inv-border); text-align: left; color: var(--inv-text); transition: border-color 0.3s ease; }
+        th { background: #4e73df; color: white !important; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        tbody tr:hover { background-color: var(--inv-hover); }
+        
+        .cell-text { color: var(--inv-text); }
+        .cell-muted { color: var(--inv-text-muted); }
         
         .badge { padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
         .status-received { background: #e1f6ed; color: #1cc88a; }
@@ -55,7 +81,10 @@ $invoices = $stmt->fetchAll();
         .btn-bulk:hover { background: #dda20a; }
         .btn-print { background: #36b9cc; color: white; }
         
-        .item-list { color: #858796; font-size: 12px; max-width: 250px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .item-list { color: var(--inv-text-muted); font-size: 12px; max-width: 250px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        
+        .theme-toggle { background: var(--inv-container); border: 1px solid var(--inv-border); border-radius: 4px; padding: 8px 15px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.3s ease, border-color 0.3s ease; font-size: 13px; font-weight: 600; color: var(--inv-text); }
+        .theme-toggle i { font-size: 14px; }
         
         @media print { .no-print { display: none !important; } .container { box-shadow: none; width: 100%; } }
     </style>
@@ -63,8 +92,12 @@ $invoices = $stmt->fetchAll();
 <body>
     <div class="container">
         <div class="header-actions no-print">
-            <h2 style="color: #4e73df; margin: 0;">Purchase Invoice Management</h2>
+            <h2 class="page-title">Purchase Invoice Management</h2>
             <div>
+                <button type="button" onclick="toggleTheme()" class="theme-toggle">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                    <span id="themeText">Dark Mode</span>
+                </button>
                 <button type="button" onclick="bulkPrint()" class="btn btn-bulk">
                     <i class="fas fa-layer-group"></i> Bulk Print Selected
                 </button>
@@ -98,13 +131,13 @@ $invoices = $stmt->fetchAll();
                     <td class="no-print">
                         <input type="checkbox" class="po-checkbox" value="<?php echo $row['PO_ID']; ?>">
                     </td>
-                    <td><strong>#<?php echo $row['PO_ID']; ?></strong></td>
-                    <td><small><?php echo date('M d, Y', strtotime($row['Order_Date'])); ?></small></td>
-                    <td><?php echo htmlspecialchars($row['Supplier_Name']); ?></td>
+                    <td><strong class="cell-text">#<?php echo $row['PO_ID']; ?></strong></td>
+                    <td><small class="cell-muted"><?php echo date('M d, Y', strtotime($row['Order_Date'])); ?></small></td>
+                    <td class="cell-text"><?php echo htmlspecialchars($row['Supplier_Name']); ?></td>
                     <td><span class="item-list" title="<?php echo htmlspecialchars($row['item_summary']); ?>">
                         <?php echo htmlspecialchars($row['item_summary'] ?: 'No items'); ?>
                     </span></td>
-                    <td><strong>$<?php echo number_format($row['Total_Cost'], 2); ?></strong></td>
+                    <td><strong class="cell-text">$<?php echo number_format($row['Total_Cost'], 2); ?></strong></td>
                     <td>
                         <?php 
                             $statusClass = (strtolower($row['Status']) == 'received') ? 'status-received' : 'status-pending';
@@ -133,10 +166,39 @@ $invoices = $stmt->fetchAll();
         function bulkPrint() {
             const selected = Array.from(document.querySelectorAll('.po-checkbox:checked')).map(cb => cb.value);
             if (selected.length === 0) { alert("Please select at least one purchase order."); return; }
-            
-            // Passes multiple IDs and set type to 'purchase'
             window.open(`print_view.php?id=${selected.join(',')}&type=purchase`, '_blank');
         }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            const current = html.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('inv-theme', newTheme);
+            if (newTheme === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                text.textContent = 'Light Mode';
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                text.textContent = 'Dark Mode';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const saved = localStorage.getItem('inv-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            if (saved === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                text.textContent = 'Light Mode';
+            }
+        });
     </script>
 </body>
 </html>

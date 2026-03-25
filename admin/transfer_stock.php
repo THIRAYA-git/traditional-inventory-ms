@@ -91,7 +91,7 @@ include('../includes/sidebar.php');
                         <div class="col-md-6 mb-3">
                             <label class="fw-bold">From (Source)</label>
                             <select name="from_source" class="form-select" required>
-                                <option value="HUB">Global Hub (Main Inventory)</option>
+                            
                                 <?php
                                 $stmt = $pdo->query("SELECT warehouse_id, name FROM warehouses");
                                 while ($row = $stmt->fetch()) {

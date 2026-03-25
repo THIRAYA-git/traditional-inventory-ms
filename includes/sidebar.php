@@ -210,8 +210,8 @@
                         <i class="fas fa-chevron-down chevron"></i>
                     </button>
                     <ul class="dropdown-container" <?= in_array($current_page, $warehouse_pages) ? 'style="display: block;"' : '' ?>>
-                        <li class="<?= $current_page === 'transfer_stock.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/transfer_stock.php">Transfer Stock</a></li>
                         <li class="<?= $current_page === 'warehouse_report.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/warehouse_report.php">Stock Report</a></li>
+                        <li class="<?= $current_page === 'transfer_stock.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/transfer_stock.php">Transfer Stock</a></li>
                         <li class="<?= $current_page === 'stock_log.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/stock_log.php">Stock Log</a></li>
                         <li class="<?= $current_page === 'stock_adjustment.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/stock_adjustment.php">Edit stock levels</a></li>
                     </ul>
@@ -225,8 +225,8 @@
                     </button>
                     <ul class="dropdown-container" <?= in_array($current_page, $sales_pages) ? 'style="display: block;"' : '' ?>>
                         <li class="<?= $current_page === 'products.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/products.php">Products</a></li>
-                        <li class="<?= $current_page === 'generate_barcodes.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/generate_barcodes.php">Print labels / Barcode generator</a></li>
-                        <li class="<?= $current_page === 'categories.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/categories.php">Categories (Product)</a></li>
+                        <li class="<?= $current_page === 'generate_barcodes.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/generate_barcodes.php">Barcode generator</a></li>
+                        <li class="<?= $current_page === 'categories.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/categories.php">Categorize Product</a></li>
                         <li class="<?= $current_page === 'orders.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/orders.php">Sales orders</a></li>
                     </ul>
                 </li>
@@ -243,30 +243,30 @@
                         <li class="<?= $current_page === 'suppliers.php' ? 'active' : '' ?>"><a href="<?= $root_path ?>admin/suppliers.php">Suppliers</a></li>
                     </ul>
                 </li>
-<?php
-            $invoice_pages = ['sales_invoices_print.php', 'purchase_invoices_print.php'];
-            ?>
+                <?php
+                $invoice_pages = ['sales_invoices_print.php', 'purchase_invoices_print.php'];
+                ?>
 
-            <li>
-                <button class="dropdown-btn <?= in_array($current_page, $invoice_pages) ? 'active' : '' ?>">
-                    <i class="fas fa-file-invoice"></i> Invoices
-                    <i class="fas fa-chevron-down chevron"></i>
-                </button>
-                <ul class="dropdown-container" <?= in_array($current_page, $invoice_pages) ? 'style="display: block;"' : '' ?>>
-                    <li class="<?= $current_page === 'sales_invoices_print.php' ? 'active' : '' ?>">
-                        <a href="<?= $root_path ?>admin/sales_invoices_print.php">
-                            Sales Invoices
-                        </a>
-                    </li>
-                    <li class="<?= $current_page === 'purchase_invoices_print.php' ? 'active' : '' ?>">
-                        <a href="<?= $root_path ?>admin/purchase_invoices_print.php">
-                            Purchase Invoices
-                        </a>
-                    </li>
-                </ul>
-            </li>
+                <li>
+                    <button class="dropdown-btn <?= in_array($current_page, $invoice_pages) ? 'active' : '' ?>">
+                        <i class="fas fa-file-invoice"></i> Invoices
+                        <i class="fas fa-chevron-down chevron"></i>
+                    </button>
+                    <ul class="dropdown-container" <?= in_array($current_page, $invoice_pages) ? 'style="display: block;"' : '' ?>>
+                        <li class="<?= $current_page === 'sales_invoices_print.php' ? 'active' : '' ?>">
+                            <a href="<?= $root_path ?>admin/sales_invoices_print.php">
+                                Sales Invoices
+                            </a>
+                        </li>
+                        <li class="<?= $current_page === 'purchase_invoices_print.php' ? 'active' : '' ?>">
+                            <a href="<?= $root_path ?>admin/purchase_invoices_print.php">
+                                Purchase Invoices
+                            </a>
+                        </li>
+                    </ul>
+                </li>
 
-                
+
                 <li class="<?= $current_page === 'users.php' ? 'active' : '' ?>">
                     <a href="<?= $root_path ?>admin/users.php"><i class="fas fa-users"></i> Users</a>
                 </li>
@@ -280,7 +280,7 @@
                 </li>
             <?php endif; ?>
 
-            
+
             <li class="<?= $current_page === 'profile.php' ? 'active' : '' ?>">
                 <a href="<?= $root_path . ($is_admin ? 'admin' : 'employee') ?>/profile.php"><i class="fas fa-user-circle"></i> Profile</a>
             </li>

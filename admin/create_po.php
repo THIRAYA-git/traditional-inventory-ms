@@ -1,13 +1,13 @@
 <?php
 // File: inventory-ms/admin/create_po.php
-include '../includes/header.php'; 
+include '../includes/header.php';
 
 // 1. Correct Path to core folder
-require_once '../core/db_connect.php'; 
+require_once '../core/db_connect.php';
 
 // --- SECURITY CHECK ---
 if ($_SESSION['user_role'] !== 'admin') {
-    header('Location: ../employee/dashboard.php'); 
+    header('Location: ../employee/dashboard.php');
     exit;
 }
 
@@ -38,9 +38,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $pdo->beginTransaction();
         try {
-            // Insert Purchase Order
-            $po_insert = $pdo->prepare("INSERT INTO purchase_orders (Supplier_ID, User_ID, Total_Cost, Status, Payment_Status) VALUES (?, ?, ?, 'Ordered', 'Pending')");
-            $po_insert->execute([$supplier_id, $user_id, $total_cost]);
+            // Insert Purchase Order (include warehouse_id)
+            $po_insert = $pdo->prepare("INSERT INTO purchase_orders (Supplier_ID, User_ID, Warehouse_ID, Total_Cost, Status, Payment_Status) VALUES (?, ?, ?, ?, 'Ordered', 'Pending')");
+            $po_insert->execute([$supplier_id, $user_id, $destination, $total_cost]);
             $po_id = $pdo->lastInsertId();
 
             // Insert Details
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
             $success_message = "Purchase Order #{$po_id} created for " . ($destination === 'HUB' ? "Global Hub" : "Warehouse") . ".";
-            $_POST = array(); 
+            $_POST = array();
         } catch (Exception $e) {
             $pdo->rollBack();
             $error_message = "Database Error: " . $e->getMessage();
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-include '../includes/sidebar.php'; 
+include '../includes/sidebar.php';
 ?>
 
 <div style="margin-left: 250px; width:80%" class="content-area">
@@ -86,12 +86,18 @@ include '../includes/sidebar.php';
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        
+
+
+
                         <div class="col-md-4 mb-3">
                             <label class="form-label">Destination Selection *</label>
                             <select name="warehouse_id" class="form-select" required>
-                                <option value="HUB">GLOBAL HUB (Main Inventory)</option>
-                                
+                                <?php
+                                $stmt = $pdo->query("SELECT warehouse_id, name FROM warehouses");
+                                while ($row = $stmt->fetch()) {
+                                    echo "<option value='{$row['warehouse_id']}'>Warehouse: {$row['name']}</option>";
+                                }
+                                ?>
                             </select>
                         </div>
 
@@ -134,11 +140,11 @@ include '../includes/sidebar.php';
 <?php include '../includes/footer.php'; ?>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         const tableBody = document.querySelector('#po-items-table tbody');
         const addItemBtn = document.getElementById('add-item-btn');
         const totalCostDisplay = document.getElementById('total_cost_display');
-        
+
         // Products data needed for JavaScript
         const productsData = <?php echo json_encode($products); ?>;
 
@@ -156,7 +162,7 @@ include '../includes/sidebar.php';
                 const quantity = parseFloat(quantityInput.value) || 0;
                 const cost = parseFloat(costInput.value) || 0;
                 const subtotal = quantity * cost;
-                
+
                 subtotalCell.textContent = '$' + subtotal.toFixed(2);
                 grandTotal += subtotal;
             });
@@ -168,7 +174,7 @@ include '../includes/sidebar.php';
             rowCount++;
             const newRow = document.createElement('tr');
             newRow.setAttribute('data-row-id', rowCount);
-            
+
             // Generate Product Dropdown Options
             let productOptions = '<option value="">Select Product</option>';
             productsData.forEach(p => {
@@ -196,7 +202,7 @@ include '../includes/sidebar.php';
             // Attach event listeners to the new row elements
             const inputs = newRow.querySelectorAll('.po-quantity, .po-cost');
             inputs.forEach(input => input.addEventListener('input', updateTotals));
-            
+
             // Set initial cost when product is selected
             const productSelect = newRow.querySelector('.product-select');
             productSelect.addEventListener('change', function() {
@@ -218,8 +224,9 @@ include '../includes/sidebar.php';
         }
 
         // Initial row and Add Item Button handler
-        createNewRow(); 
+        createNewRow();
         addItemBtn.addEventListener('click', createNewRow);
     });
 </script>
+
 </html>

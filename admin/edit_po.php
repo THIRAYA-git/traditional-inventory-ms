@@ -33,15 +33,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // This is the trigger to update inventory stock
         if ($new_status === 'Received') {
             
+            // Fetch the destination warehouse for this PO
+            $warehouse_stmt = $pdo->prepare("SELECT Warehouse_ID FROM purchase_orders WHERE PO_ID = ?");
+            $warehouse_stmt->execute([$po_id]);
+            $warehouse_id = $warehouse_stmt->fetchColumn();
+
             // Fetch all products and quantities associated with this PO
             $details_stmt = $pdo->prepare("SELECT Product_ID, Quantity FROM po_details WHERE PO_ID = ?");
             $details_stmt->execute([$po_id]);
             $details = $details_stmt->fetchAll(PDO::FETCH_ASSOC);
 
-            // Loop through details and update the stock in the 'products' table
+            // Loop through details and update both product stock and warehouse stock
             foreach ($details as $item) {
+                // Update general product stock
                 $update_stock = $pdo->prepare("UPDATE products SET Stock = Stock + ? WHERE Product_ID = ?");
                 $update_stock->execute([$item['Quantity'], $item['Product_ID']]);
+
+                // Update warehouse stock (insert or update)
+                if ($warehouse_id) {
+                    $update_warehouse_stock = $pdo->prepare("
+                        INSERT INTO warehouse_stock (warehouse_id, product_id, quantity) 
+                        VALUES (?, ?, ?) 
+                        ON DUPLICATE KEY UPDATE quantity = quantity + ?
+                    ");
+                    $update_warehouse_stock->execute([$warehouse_id, $item['Product_ID'], $item['Quantity'], $item['Quantity']]);
+                }
             }
         }
         

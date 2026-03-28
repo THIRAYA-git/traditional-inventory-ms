@@ -67,7 +67,7 @@ if (isset($_SESSION['user_id'])) {
     }
 }
 
-$low_stock_stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE Stock <= Minimum_Stock_Level");
+$low_stock_stmt = $pdo->prepare("SELECT COUNT(*) FROM products WHERE (Minimum_Stock_Level IS NOT NULL AND Stock <= Minimum_Stock_Level) OR (Minimum_Stock_Level IS NULL AND Stock <= 0)");
 $low_stock_stmt->execute();
 $total_alert_count = $low_stock_stmt->fetchColumn();
 ?>
@@ -179,7 +179,7 @@ $total_alert_count = $low_stock_stmt->fetchColumn();
     </a>
 
     <div class="d-flex align-items-center">
-        <a href="low_stock_report.php" class="theme-btn me-2" title="Low Stock Report" style="background:linear-gradient(135deg,#e74a3b,#be2617);">
+        <a href="low_stock_report.php" class="theme-btn me-2" title="Low Stock Report";">
             <i class="fas fa-bell" style="color:#fff;"></i>
         </a>
 

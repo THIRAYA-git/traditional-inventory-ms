@@ -4,9 +4,16 @@ include('../includes/sidebar.php');
 $pdo = connectDB();
 
 // 1. Fetch all active warehouses for columns
-$warehouses = $pdo->query("SELECT warehouse_id, name FROM warehouses WHERE status='active' GROUP BY name ORDER BY name")->fetchAll();
+$warehouses = $pdo->query("SELECT warehouse_id, name FROM warehouses WHERE status='active' GROUP BY warehouse_id ORDER BY name")->fetchAll();
 // 2. Fetch all products
 $products = $pdo->query("SELECT product_id, name, SKU FROM products ORDER BY name")->fetchAll();
+
+// Pre-fetch all warehouse_stock data in one query to avoid N+1 problem
+$allStockStmt = $pdo->query("SELECT warehouse_id, product_id, quantity FROM warehouse_stock");
+$stockMap = [];
+while ($row = $allStockStmt->fetch(PDO::FETCH_ASSOC)) {
+    $stockMap[$row['warehouse_id']][$row['product_id']] = (int)$row['quantity'];
+}
 ?>
 
 <div class="content-area">
@@ -41,15 +48,12 @@ $products = $pdo->query("SELECT product_id, name, SKU FROM products ORDER BY nam
                                         <strong><?php echo htmlspecialchars($p['name']); ?></strong><br>
                                         <small class="text-muted"><?php echo htmlspecialchars($p['SKU']); ?></small>
                                     </td>
-                                    <?php 
+                                    <?php
                                     $total_row_stock = 0;
-                                    foreach ($warehouses as $w): 
-                                        // Get stock for this specific product in this specific warehouse
-                                        $stmt = $pdo->prepare("SELECT quantity FROM warehouse_stock WHERE product_id = ? AND warehouse_id = ?");
-                                        $stmt->execute([$p['product_id'], $w['warehouse_id']]);
-                                        $qty = $stmt->fetchColumn() ?: 0;
+                                    foreach ($warehouses as $w):
+                                        $qty = $stockMap[$w['warehouse_id']][$p['product_id']] ?? 0;
                                         $total_row_stock += $qty;
-                                        
+
                                         $text_color = ($qty < 10) ? 'text-danger fw-bold' : '';
                                     ?>
                                         <td class="text-center <?php echo $text_color; ?>">

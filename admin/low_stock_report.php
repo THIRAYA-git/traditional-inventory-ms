@@ -50,7 +50,7 @@ include '../includes/sidebar.php';
         <div class="card mb-5 shadow-sm">
             <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-globe me-2"></i> General Inventory Low Stock</span>
-                <span class="badge bg-light text-dark"><?php echo $low_stock_count; ?> Items</span>
+                <span class="badge bg-gray text-gray border"><?php echo $low_stock_count; ?> Items</span>
             </div>
             <div class="card-body">
                 <?php if ($low_stock_count === 0): ?>
@@ -77,10 +77,10 @@ include '../includes/sidebar.php';
                                 ?>
                                 <tr>
                                     <td class="text-muted"><?php echo $sn_global++; ?></td>
-                                    <td><span class="badge bg-secondary">#<?php echo htmlspecialchars($item['Product_ID']); ?></span></td>
+                                    <td><span class="badge bg-gray text-dark border">#<?php echo htmlspecialchars($item['Product_ID']); ?></span></td>
                                     <td><?php echo htmlspecialchars($item['Name']); ?></td>
-                                    <td class="text-center text-danger fw-bold"><?php echo htmlspecialchars($item['Stock']); ?></td>
-                                    <td class="text-center"><?php echo htmlspecialchars($item['Minimum_Stock_Level']); ?></td>
+                                    <td class="text-center"><?php echo htmlspecialchars($item['Stock']); ?></td>
+                                    <td class="text-center"><?php echo htmlspecialchars($item['Minimum_Stock_Level'] ?? 0); ?></td>
                                     <td class="text-end">
                                         <a href="create_po.php?product=<?php echo $item['Product_ID']; ?>" class="btn btn-sm btn-success">
                                             <i class="fas fa-cart-plus"></i> Create PO
@@ -98,7 +98,7 @@ include '../includes/sidebar.php';
         <div class="card mb-5 shadow-sm">
             <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
                 <span><i class="fas fa-exclamation-triangle me-2"></i> Warehouse Location Alerts (At or Below Minimum Level)</span>
-                <span class="badge bg-light text-danger"><?php echo $warehouse_alert_count; ?> Alerts</span>
+                <span class="badge bg-gray text-gray border"><?php echo $warehouse_alert_count; ?> Alerts</span>
             </div>
             <div class="card-body">
                 <?php if ($warehouse_alert_count === 0): ?>
@@ -125,7 +125,7 @@ include '../includes/sidebar.php';
                                 ?>
                                 <tr>
                                     <td class="text-muted"><?php echo $sn_warehouse++; ?></td>
-                                    <td><span class="badge bg-light text-dark border">#<?php echo htmlspecialchars($alert['Product_ID']); ?></span></td>
+                                    <td><span class="badge bg-gray text-dark border">#<?php echo htmlspecialchars($alert['Product_ID']); ?></span></td>
                                     <td><strong><?php echo htmlspecialchars($alert['Product_Name']); ?></strong></td>
                                     <td><i class="fas fa-warehouse me-1 text-muted"></i> <?php echo htmlspecialchars($alert['Warehouse_Name']); ?></td>
                                     <td class="text-center">

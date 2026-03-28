@@ -12,8 +12,9 @@ function getLowStockItems() {
         
         $stmt = $pdo->prepare("
             SELECT Product_ID, Name, Stock, Minimum_Stock_Level
-            FROM products 
-            WHERE Stock <= Minimum_Stock_Level
+            FROM products
+            WHERE (Minimum_Stock_Level IS NOT NULL AND Stock <= Minimum_Stock_Level)
+               OR (Minimum_Stock_Level IS NULL AND Stock <= 0)
             ORDER BY Stock ASC
         ");
         $stmt->execute();
@@ -38,7 +39,8 @@ function getWarehouseLowStock() {
                   FROM warehouse_stock ws
                   JOIN products p ON ws.product_id = p.product_id
                   JOIN warehouses w ON ws.warehouse_id = w.warehouse_id
-                  WHERE ws.quantity <= p.minimum_stock_level
+                  WHERE (p.minimum_stock_level IS NOT NULL AND ws.quantity <= p.minimum_stock_level)
+                     OR (p.minimum_stock_level IS NULL AND ws.quantity <= 0)
                   GROUP BY p.product_id, w.warehouse_id
                   ORDER BY p.name ASC";
         

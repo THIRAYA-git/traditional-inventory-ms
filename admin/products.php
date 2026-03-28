@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = trim($_POST['description']);
     $price = filter_var($_POST['price'], FILTER_VALIDATE_FLOAT);
     $stock = filter_var($_POST['stock'], FILTER_VALIDATE_INT);
+    $minimum_stock_level = filter_var($_POST['minimum_stock_level'], FILTER_VALIDATE_INT) ?: 0;
     $category_id = filter_var($_POST['category_id'], FILTER_VALIDATE_INT);
     $supplier_id = filter_var($_POST['supplier_id'], FILTER_VALIDATE_INT);
     $product_id = filter_var($_POST['product_id'] ?? null, FILTER_VALIDATE_INT);
@@ -33,16 +34,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             if ($product_id) {
                 // UPDATE Operation
-                $stmt = $pdo->prepare("UPDATE Products 
-                    SET Name = ?, Description = ?, Price = ?, Stock = ?, Category_ID = ?, Supplier_ID = ? 
+                $stmt = $pdo->prepare("UPDATE Products
+                    SET Name = ?, Description = ?, Price = ?, Stock = ?, Minimum_Stock_Level = ?, Category_ID = ?, Supplier_ID = ?
                     WHERE Product_ID = ?");
-                $stmt->execute([$name, $description, $price, $stock, $category_id, $supplier_id, $product_id]);
+                $stmt->execute([$name, $description, $price, $stock, $minimum_stock_level, $category_id, $supplier_id, $product_id]);
                 $message = '<div class="alert alert-success">Product updated successfully!</div>';
             } else {
                 // CREATE Operation
-                $stmt = $pdo->prepare("INSERT INTO Products (Name, Description, Price, Stock, Category_ID, Supplier_ID) 
-                    VALUES (?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$name, $description, $price, $stock, $category_id, $supplier_id]);
+                $stmt = $pdo->prepare("INSERT INTO Products (Name, Description, Price, Stock, Minimum_Stock_Level, Category_ID, Supplier_ID)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$name, $description, $price, $stock, $minimum_stock_level, $category_id, $supplier_id]);
+                $new_product_id = $pdo->lastInsertId();
+                // Auto-create warehouse_stock rows for all active warehouses
+                $warehouses = $pdo->query("SELECT warehouse_id FROM warehouses WHERE status = 'active'")->fetchAll();
+                foreach ($warehouses as $w) {
+                    $pdo->prepare("INSERT INTO warehouse_stock (warehouse_id, product_id, quantity) VALUES (?, ?, 0)")->execute([$w['warehouse_id'], $new_product_id]);
+                }
                 $message = '<div class="alert alert-success">Product added successfully!</div>';
             }
         } catch (PDOException $e) {
@@ -155,8 +162,8 @@ include '../includes/sidebar.php';
                     ?>"><?php echo $p['Stock']; ?></span>
                 </td>
                 <td class="text-center">
-                    <button class="btn btn-sm btn-info text-white" 
-                            data-bs-toggle="modal" 
+                    <button class="btn btn-sm btn-info text-white"
+                            data-bs-toggle="modal"
                             data-bs-target="#editModal"
                             data-id="<?php echo $p['Product_ID']; ?>"
                             data-cat-id="<?php echo $p['Category_ID']; ?>"
@@ -164,6 +171,7 @@ include '../includes/sidebar.php';
                             data-name="<?php echo htmlspecialchars($p['Name']); ?>"
                             data-price="<?php echo $p['Price']; ?>"
                             data-stock="<?php echo $p['Stock']; ?>"
+                            data-min-level="<?php echo $p['Minimum_Stock_Level']; ?>"
                             data-desc="<?php echo htmlspecialchars($p['Description']); ?>">
                         <i class="fas fa-edit"></i> Edit
                     </button>
@@ -204,6 +212,10 @@ include '../includes/sidebar.php';
                         <div class="col-md-6 mb-3">
                             <label for="create_stock" class="form-label">Stock</label>
                             <input type="number" class="form-control" id="create_stock" name="stock" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="create_minimum_stock_level" class="form-label">Minimum Stock Level</label>
+                            <input type="number" class="form-control" id="create_minimum_stock_level" name="minimum_stock_level" value="0" required>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -260,6 +272,10 @@ include '../includes/sidebar.php';
                         <div class="col-md-6 mb-3">
                             <label for="edit_stock" class="form-label">Stock</label>
                             <input type="number" class="form-control" id="edit_stock" name="stock" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="edit_minimum_stock_level" class="form-label">Minimum Stock Level</label>
+                            <input type="number" class="form-control" id="edit_minimum_stock_level" name="minimum_stock_level" required>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -356,6 +372,7 @@ include '../includes/sidebar.php';
         var desc = button.getAttribute('data-desc');
         var price = button.getAttribute('data-price');
         var stock = button.getAttribute('data-stock');
+        var minLevel = button.getAttribute('data-min-level');
         var catId = button.getAttribute('data-cat-id');
         var suppId = button.getAttribute('data-supp-id');
 
@@ -365,6 +382,7 @@ include '../includes/sidebar.php';
         editModal.querySelector('#edit_description').value = desc;
         editModal.querySelector('#edit_price').value = price;
         editModal.querySelector('#edit_stock').value = stock;
+        editModal.querySelector('#edit_minimum_stock_level').value = (minLevel === '0' || minLevel === '' || minLevel === null) ? 0 : minLevel;
         
         // Set the selected options for the dropdowns
         editModal.querySelector('#edit_category_id').value = catId;

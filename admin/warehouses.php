@@ -10,6 +10,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_warehouse'])) {
     
     $stmt = $pdo->prepare("INSERT INTO warehouses (name, location) VALUES (?, ?)");
     if ($stmt->execute([$name, $location])) {
+        $new_warehouse_id = $pdo->lastInsertId();
+        // Auto-create warehouse_stock rows for all existing products
+        $products = $pdo->query("SELECT product_id FROM products")->fetchAll();
+        foreach ($products as $p) {
+            $pdo->prepare("INSERT INTO warehouse_stock (warehouse_id, product_id, quantity) VALUES (?, ?, 0)")->execute([$new_warehouse_id, $p['product_id']]);
+        }
         echo "<script>alert('Warehouse added successfully!'); window.location.href='warehouses.php';</script>";
     }
 }

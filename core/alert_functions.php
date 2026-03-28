@@ -29,16 +29,16 @@ function getLowStockItems() {
 function getWarehouseLowStock() {
     $pdo = connectDB(); 
     try {
-        // Added ws.id to act as a serial/row identifier
         $query = "SELECT ws.id AS Alert_ID, 
                          p.product_id AS Product_ID, 
                          p.name AS Product_Name, 
                          w.name AS Warehouse_Name, 
-                         ws.quantity AS Current_Stock
+                         ws.quantity AS Current_Stock,
+                         p.minimum_stock_level AS Minimum_Stock_Level
                   FROM warehouse_stock ws
                   JOIN products p ON ws.product_id = p.product_id
                   JOIN warehouses w ON ws.warehouse_id = w.warehouse_id
-                  WHERE ws.quantity < 20
+                  WHERE ws.quantity <= p.minimum_stock_level
                   GROUP BY p.product_id, w.warehouse_id
                   ORDER BY p.name ASC";
         

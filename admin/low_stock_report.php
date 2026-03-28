@@ -97,7 +97,7 @@ include '../includes/sidebar.php';
 
         <div class="card mb-5 shadow-sm">
             <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-exclamation-triangle me-2"></i> Warehouse Location Alerts (Below 20 units)</span>
+                <span><i class="fas fa-exclamation-triangle me-2"></i> Warehouse Location Alerts (At or Below Minimum Level)</span>
                 <span class="badge bg-light text-danger"><?php echo $warehouse_alert_count; ?> Alerts</span>
             </div>
             <div class="card-body">

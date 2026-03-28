@@ -179,6 +179,10 @@ $total_alert_count = $low_stock_stmt->fetchColumn();
     </a>
 
     <div class="d-flex align-items-center">
+        <a href="low_stock_report.php" class="theme-btn me-2" title="Low Stock Report" style="background:linear-gradient(135deg,#e74a3b,#be2617);">
+            <i class="fas fa-bell" style="color:#fff;"></i>
+        </a>
+
         <div class="theme-btn" id="theme-toggle" title="Switch Theme">
             <i class="fas fa-moon" id="theme-icon"></i>
         </div>

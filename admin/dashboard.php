@@ -450,12 +450,15 @@ include '../includes/sidebar.php';
                 </h6>
                 <div class="row g-2">
                     <?php 
-                    $low_stock = $pdo->query("SELECT p.name, w.name as wh, ws.quantity FROM warehouse_stock ws JOIN products p ON ws.product_id = p.product_id JOIN warehouses w ON ws.warehouse_id = w.warehouse_id WHERE ws.quantity < 5 LIMIT 4")->fetchAll();
+                    $low_stock = $pdo->query("SELECT p.product_id, p.name, w.name as wh, ws.quantity FROM warehouse_stock ws JOIN products p ON ws.product_id = p.product_id JOIN warehouses w ON ws.warehouse_id = w.warehouse_id WHERE ws.quantity <= p.minimum_stock_level LIMIT 4")->fetchAll();
                     foreach($low_stock as $ls): ?>
                     <div class="col-md-3">
                         <div class="stock-alert-item">
                             <div>
-                                <div class="item-name"><?= htmlspecialchars($ls['name']) ?></div>
+                                <div class="item-name">
+                                    <span class="badge me-1" style="background:#1e293b;color:#fff;font-size:0.65rem;">#<?= htmlspecialchars($ls['product_id']) ?></span>
+                                    <?= htmlspecialchars($ls['name']) ?>
+                                </div>
                                 <div class="item-wh"><i class="fas fa-map-marker-alt me-1"></i><?= htmlspecialchars($ls['wh']) ?></div>
                             </div>
                             <span class="badge rounded-pill" style="background:#e74a3b;font-size:0.75rem;padding:5px 10px;">

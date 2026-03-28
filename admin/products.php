@@ -81,11 +81,15 @@ if (isset($_GET['delete_id'])) {
 // C. READ Operation (Fetch all products with Category and Supplier names)
 // Include search functionality as per the screenshot
 $search_query = $_GET['search'] ?? '';
+$page = isset($_GET['page']) ? max(1, filter_var($_GET['page'], FILTER_VALIDATE_INT)) : 1;
+$per_page = 10;
+$offset = ($page - 1) * $per_page;
+
 $sql = "
-    SELECT 
-        p.*, 
-        c.Name AS CategoryName, 
-        s.Name AS SupplierName 
+    SELECT
+        p.*,
+        c.Name AS CategoryName,
+        s.Name AS SupplierName
     FROM Products p
     JOIN Categories c ON p.Category_ID = c.Category_ID
     JOIN Suppliers s ON p.Supplier_ID = s.Supplier_ID
@@ -101,6 +105,16 @@ if (!empty($search_query)) {
 
 $sql .= $where_clause . " ORDER BY p.Name ASC";
 
+// Get total count for pagination
+$count_sql = "SELECT COUNT(*) FROM Products p" . $where_clause;
+$count_stmt = $pdo->prepare($count_sql);
+$count_stmt->execute($params);
+$total_products = $count_stmt->fetchColumn();
+$total_pages = ceil($total_products / $per_page);
+
+// Add LIMIT and OFFSET
+$sql .= " LIMIT $per_page OFFSET $offset";
+
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $products = $stmt->fetchAll();
@@ -109,28 +123,30 @@ include '../includes/sidebar.php';
 ?>
 
 <div style="margin-left: 283px; width: 80%">
-<h2 class="mb-4" style="padding-top: 20px;">Product Management</h2>
+<h2 class="mb-3" style="padding-top: 20px;">Product Management</h2>
 <?php echo $message; ?>
 
-<div class="d-flex justify-content-between mb-4">
-    <form method="GET" class="w-75">
-        <div class="input-group">
-            <input type="text" class="form-control" name="search" 
-                   placeholder="Search products by name..." value="<?php echo htmlspecialchars($search_query); ?>">
+<div class="d-flex justify-content-between mb-3 align-items-center gap-3">
+    <form method="GET" class="flex-grow-1 mb-0">
+        <div class="input-group mb-0">
+            <input type="text" class="form-control" name="search"
+                   placeholder="Search products..." value="<?php echo htmlspecialchars($search_query); ?>">
             <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
             <?php if (!empty($search_query)): ?>
                 <a href="products.php" class="btn btn-outline-danger" title="Clear Search"><i class="fas fa-times"></i></a>
             <?php endif; ?>
         </div>
     </form>
-    
-    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
-        <i class="fas fa-plus me-2"></i> Add Product
-    </button>
+
+    <div class="align-self-center">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
+            <i class="fas fa-plus me-1"></i> Add Product
+        </button>
+    </div>
 </div>
 
 
-<div class="table-responsive">
+<div class="table-responsive" style="width: 120%;">
     <table class="table table-striped table-hover align-middle">
         <thead class="table-dark">
             <tr>
@@ -304,8 +320,47 @@ include '../includes/sidebar.php';
             </form>
         </div>
     </div>
+</div><!-- end modal-dialog -->
+</div><!-- end modal fade -->
+
+<!-- Pagination -->
+<?php if ($total_pages > 1): ?>
+<div class="d-flex justify-content-center">
+    <nav aria-label="Products pagination">
+        <ul class="pagination mb-1">
+            <?php
+            $queryParams = [];
+            if (!empty($search_query)) $queryParams['search'] = $search_query;
+            ?>
+            <li class="page-item <?php echo ($page <= 1) ? 'disabled' : ''; ?>">
+                <a class="page-link" href="?<?php echo http_build_query(array_merge($queryParams, ['page' => $page - 1])); ?>">Previous</a>
+            </li>
+            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
+                    <a class="page-link" href="?<?php echo http_build_query(array_merge($queryParams, ['page' => $i])); ?>"><?php echo $i; ?></a>
+                </li>
+            <?php endfor; ?>
+            <li class="page-item <?php echo ($page >= $total_pages) ? 'disabled' : ''; ?>">
+                <a class="page-link" href="?<?php echo http_build_query(array_merge($queryParams, ['page' => $page + 1])); ?>">Next</a>
+            </li>
+        </ul>
+    </nav>
 </div>
+<?php endif; ?>
+
+</div><!-- end main content wrapper -->
+
+<!-- Floating Previous/Next Navigation Buttons -->
+<div id="floatingNav" class="floating-nav" style="display: none;">
+    <button id="btnPrev" class="nav-btn nav-btn-up" title="Previous">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+    <span id="navLabel" class="nav-label"></span>
+    <button id="btnNext" class="nav-btn nav-btn-down" title="Next">
+        <i class="fas fa-chevron-down"></i>
+    </button>
 </div>
+
 <style>
 /* Universal fix to prevent padding from expanding the 100% width */
 *, *::before, *::after {
@@ -360,6 +415,70 @@ include '../includes/sidebar.php';
         min-width: 600px !important; /* Prevents text from squishing */
     }
 }
+
+/* Floating Navigation Buttons */
+.floating-nav {
+    position: fixed;
+    right: 20px;
+    bottom: 50%;
+    transform: translateY(50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 1050;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 10px 8px;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border: 1px solid #ddd;
+}
+
+.nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: #0d6efd;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.nav-btn:hover {
+    background: #0b5ed7;
+    transform: scale(1.1);
+}
+
+.nav-btn:active {
+    transform: scale(0.95);
+}
+
+.nav-label {
+    font-size: 11px;
+    color: #666;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+}
+
+@media screen and (max-width: 992px) {
+    .floating-nav {
+        right: 10px;
+        bottom: 30%;
+        padding: 8px 6px;
+    }
+
+    .nav-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+    }
+}
 </style>
 <script>
     var editModal = document.getElementById('editModal');
@@ -388,6 +507,50 @@ include '../includes/sidebar.php';
         editModal.querySelector('#edit_category_id').value = catId;
         editModal.querySelector('#edit_supplier_id').value = suppId;
     });
+
+    // Floating Previous/Next Navigation
+    const floatingNav = document.getElementById('floatingNav');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const navLabel = document.getElementById('navLabel');
+    const tableWrapper = document.querySelector('.table-responsive');
+
+    function updateNavVisibility() {
+        if (!tableWrapper) return;
+
+        const tableRect = tableWrapper.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const tableHeight = tableRect.height;
+
+        // Show nav if table is taller than viewport (needs scrolling)
+        const needsNav = tableHeight > viewportHeight;
+        floatingNav.style.display = needsNav ? 'flex' : 'none';
+
+        // Calculate scroll percentage based on how far table top has scrolled past viewport top
+        const scrolled = -tableRect.top;
+        const scrollable = tableHeight - viewportHeight;
+        const currentIndex = scrollable > 0 ? Math.round((scrolled / scrollable) * 100) : 0;
+        navLabel.textContent = Math.max(0, Math.min(100, currentIndex)) + '%';
+    }
+
+    function scrollToDirection(direction) {
+        const scrollAmount = window.innerHeight * 0.7;
+        if (direction === 'up') {
+            window.scrollBy({ top: -scrollAmount, behavior: 'smooth' });
+        } else {
+            window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+        }
+    }
+
+    btnPrev.addEventListener('click', () => scrollToDirection('up'));
+    btnNext.addEventListener('click', () => scrollToDirection('down'));
+
+    // Update nav visibility on scroll and resize
+    window.addEventListener('scroll', updateNavVisibility);
+    window.addEventListener('resize', updateNavVisibility);
+
+    // Initial check
+    setTimeout(updateNavVisibility, 100);
 </script>
 
 <?php include '../includes/footer.php'; ?>

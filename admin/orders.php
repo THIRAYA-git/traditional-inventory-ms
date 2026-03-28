@@ -1,16 +1,36 @@
 <?php
 include '../includes/header.php'; // Includes session_start() and security check
-// include '../core/db_connect.php'; 
+// include '../core/db_connect.php';
 
 $pdo = connectDB();
 $message = '';
 
 // --- SEARCH LOGIC ---
 $search = $_GET['search'] ?? '';
+$page = isset($_GET['page']) ? max(1, filter_var($_GET['page'], FILTER_VALIDATE_INT)) : 1;
+$per_page = 12;
+$offset = ($page - 1) * $per_page;
+
+// --- COUNT TOTAL ORDERS ---
+$count_sql = "
+    SELECT COUNT(DISTINCT o.Order_ID)
+    FROM Orders o
+    JOIN Users u ON o.User_ID = u.User_ID
+    JOIN Order_Details od ON o.Order_ID = od.Order_ID
+    JOIN Products p ON od.Product_ID = p.Product_ID
+    JOIN Categories c ON p.Category_ID = c.Category_ID
+    WHERE u.Name LIKE ?
+    OR p.Name LIKE ?
+    OR c.Name LIKE ?
+";
+$count_stmt = $pdo->prepare($count_sql);
+$count_stmt->execute(["%$search%", "%$search%", "%$search%"]);
+$total_orders = $count_stmt->fetchColumn();
+$total_pages = ceil($total_orders / $per_page);
 
 // --- READ OPERATION (Fetch orders with search filtering) ---
 $sql = "
-    SELECT 
+    SELECT
         o.Order_ID,
         u.Name AS CustomerName,
         u.Address AS CustomerAddress,
@@ -24,47 +44,44 @@ $sql = "
     JOIN Order_Details od ON o.Order_ID = od.Order_ID
     JOIN Products p ON od.Product_ID = p.Product_ID
     JOIN Categories c ON p.Category_ID = c.Category_ID
-    WHERE u.Name LIKE ? 
-    OR p.Name LIKE ? 
+    WHERE u.Name LIKE ?
+    OR p.Name LIKE ?
     OR c.Name LIKE ?
     ORDER BY o.Order_Date DESC
+    LIMIT $per_page OFFSET $offset
 ";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute(["%$search%", "%$search%", "%$search%"]);
 $orders = $stmt->fetchAll();
 
-include '../includes/sidebar.php'; 
+include '../includes/sidebar.php';
 ?>
 
-<div style="margin-left: 275px; width:80%">
-    <div class="d-flex justify-content-between align-items-center mt-4 mb-4">
-        <h2>Order Management</h2>
-        <div class="no-print">
-            <button onclick="window.print()" class="btn btn-primary">
-                <i class="fas fa-print"></i> Print List
-            </button>
-            <button onclick="window.print()" class="btn btn-success">
-                <i class="fas fa-file-pdf"></i> Download PDF
-            </button>
-        </div>
-    </div>
+<div style="margin-left: 283px; width: 80%">
+    <h2 class="mb-3" style="padding-top: 20px;">Order Management</h2>
 
-    <?php echo $message; ?>
-
-    <div class="row mb-4 no-print">
-        <div class="col-md-5">
-            <form method="GET" class="input-group">
-                <input type="text" name="search" class="form-control" 
-                       placeholder="Search by Name, Product, or Category..." 
-                       value="<?php echo htmlspecialchars($search); ?>">
+    <div class="d-flex justify-content-between mb-3 align-items-center gap-3 no-print">
+        <form method="GET" class="flex-grow-1 mb-0">
+            <div class="input-group mb-0">
+                <input type="text" name="search" class="form-control"
+                       placeholder="Search orders..." value="<?php echo htmlspecialchars($search); ?>">
                 <button class="btn btn-outline-secondary" type="submit">
-                    <i class="fas fa-search"></i> Search
+                    <i class="fas fa-search"></i>
                 </button>
                 <?php if ($search): ?>
-                    <a href="orders.php" class="btn btn-outline-danger">Clear</a>
+                    <a href="orders.php" class="btn btn-outline-danger"><i class="fas fa-times"></i></a>
                 <?php endif; ?>
-            </form>
+            </div>
+        </form>
+
+        <div class="d-flex gap-2 align-items-center">
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print me-1"></i> Print
+            </button>
+            <button onclick="window.print()" class="btn btn-success">
+                <i class="fas fa-file-pdf me-1"></i> Download PDF
+            </button>
         </div>
     </div>
 
@@ -88,7 +105,7 @@ include '../includes/sidebar.php';
                         <td colspan="8" class="text-center text-muted">No orders found.</td>
                     </tr>
                 <?php endif; ?>
-                <?php $sn = 1; ?>
+                <?php $sn = $offset + 1; ?>
                 <?php foreach ($orders as $order): ?>
                 <tr>
                     <td><?php echo $sn++; ?></td>
@@ -104,6 +121,32 @@ include '../includes/sidebar.php';
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination -->
+    <?php if ($total_pages > 1): ?>
+    <div class="d-flex justify-content-center no-print">
+        <nav aria-label="Orders pagination">
+            <ul class="pagination mb-0">
+                <?php
+                $queryParams = [];
+                if (!empty($search)) $queryParams['search'] = $search;
+                ?>
+                <li class="page-item <?php echo ($page <= 1) ? 'disabled' : ''; ?>">
+                    <a class="page-link" href="?<?php echo http_build_query(array_merge($queryParams, ['page' => $page - 1])); ?>">Previous</a>
+                </li>
+                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                    <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
+                        <a class="page-link" href="?<?php echo http_build_query(array_merge($queryParams, ['page' => $i])); ?>"><?php echo $i; ?></a>
+                    </li>
+                <?php endfor; ?>
+                <li class="page-item <?php echo ($page >= $total_pages) ? 'disabled' : ''; ?>">
+                    <a class="page-link" href="?<?php echo http_build_query(array_merge($queryParams, ['page' => $page + 1])); ?>">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <?php endif; ?>
+
 </div>
 
 <style>

@@ -299,6 +299,9 @@ include '../includes/sidebar.php';
     [data-theme="dark"] .sidebar-wh-title { color: #ffffff !important; }
     [data-theme="dark"] .sidebar-wh-sub { color: #a0aec0 !important; }
     [data-theme="dark"] .sidebar-wh-name { color: #ffffff !important; }
+
+    /* ── Red Close Button ── */
+    .btn-close { filter: invert(13%) sepia(100%) saturate(6572%) hue-rotate(357deg) brightness(100%) contrast(106%); }
 </style>
 
 <div class="content-area">

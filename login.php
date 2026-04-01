@@ -24,33 +24,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = 'Email and Password are required.';
     } else {
         try {
-            $stmt = $pdo->prepare("SELECT User_ID, Name, Email, Password, Role FROM Users WHERE Email = ?");
+            $stmt = $pdo->prepare("SELECT User_ID, Name, Email, Password, Role, is_active FROM Users WHERE Email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['Password'])) {
-                session_regenerate_id(true);
-                
-                $_SESSION['user_id'] = $user['User_ID'];
-                $_SESSION['user_name'] = $user['Name'];
-                $_SESSION['user_role'] = $user['Role'];
-                $_SESSION['login_time'] = time();
-
-                $dbRole = strtolower(trim($user['Role']));
-
-                echo "<script>
-                sessionStorage.setItem('session_fp', '" . md5($user['User_ID'] . $user['Role'] . $_SERVER['HTTP_USER_AGENT']) . "');
-                sessionStorage.setItem('session_init', '1');
-                </script>";
-                
-                if ($dbRole === 'admin') {
-                    header('Location: admin/dashboard.php');
-                    exit;
-                } else if ($dbRole === 'user' || $dbRole === 'employee') {
-                    header('Location: employee/products.php');
-                    exit;
+                if (!$user['is_active']) {
+                    $message = 'Your account has been deactivated. Please contact admin.';
                 } else {
-                    $message = "Role '{$user['Role']}' not recognized. Please contact admin.";
+                    session_regenerate_id(true);
+
+                    $_SESSION['user_id'] = $user['User_ID'];
+                    $_SESSION['user_name'] = $user['Name'];
+                    $_SESSION['user_role'] = $user['Role'];
+                    $_SESSION['login_time'] = time();
+
+                    $dbRole = strtolower(trim($user['Role']));
+
+                    echo "<script>
+                    sessionStorage.setItem('session_fp', '" . md5($user['User_ID'] . $user['Role'] . $_SERVER['HTTP_USER_AGENT']) . "');
+                    sessionStorage.setItem('session_init', '1');
+                    </script>";
+
+                    if ($dbRole === 'admin') {
+                        header('Location: admin/dashboard.php');
+                        exit;
+                    } else if ($dbRole === 'user' || $dbRole === 'employee') {
+                        header('Location: employee/products.php');
+                        exit;
+                    } else {
+                        $message = "Role '{$user['Role']}' not recognized. Please contact admin.";
+                    }
                 }
             } else {
                 $message = 'Invalid email or password.';

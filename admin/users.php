@@ -63,34 +63,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// B. DELETE Operation
-if (isset($_GET['delete_id'])) {
-    $delete_id = filter_var($_GET['delete_id'], FILTER_VALIDATE_INT);
-    
-    // Prevent admin from deleting their own account
-    if ($delete_id == $_SESSION['user_id']) {
-        $message = '<div class="alert alert-danger">You cannot delete your own active account.</div>';
+// B. TOGGLE ACTIVE/INACTIVE STATUS
+if (isset($_GET['toggle_id'])) {
+    $toggle_id = filter_var($_GET['toggle_id'], FILTER_VALIDATE_INT);
+
+    // Prevent admin from deactivating their own account
+    if ($toggle_id == $_SESSION['user_id']) {
+        $message = '<div class="alert alert-danger">You cannot deactivate your own account.</div>';
     } else {
         try {
-            // Check for linked orders (prevent deleting users with sales history)
-            $check = $pdo->prepare("SELECT COUNT(*) FROM Orders WHERE User_ID = ?");
-            $check->execute([$delete_id]);
-            if ($check->fetchColumn() > 0) {
-                 $message = '<div class="alert alert-danger">Cannot delete: User has recorded orders.</div>';
+            // Get current status
+            $check = $pdo->prepare("SELECT is_active FROM Users WHERE User_ID = ?");
+            $check->execute([$toggle_id]);
+            $current = $check->fetchColumn();
+
+            if ($current === false) {
+                $message = '<div class="alert alert-danger">User not found.</div>';
             } else {
-                $stmt = $pdo->prepare("DELETE FROM Users WHERE User_ID = ?");
-                $stmt->execute([$delete_id]);
-                $message = '<div class="alert alert-success">User deleted successfully!</div>';
+                $new_status = $current ? 0 : 1;
+                $action = $new_status ? 'activated' : 'deactivated';
+                $stmt = $pdo->prepare("UPDATE Users SET is_active = ? WHERE User_ID = ?");
+                $stmt->execute([$new_status, $toggle_id]);
+                $message = '<div class="alert alert-success">User ' . $action . ' successfully!</div>';
             }
         } catch (PDOException $e) {
-            $message = '<div class="alert alert-danger">Error deleting user: ' . $e->getMessage() . '</div>';
+            $message = '<div class="alert alert-danger">Error updating user status: ' . $e->getMessage() . '</div>';
         }
     }
 }
 
-// C. READ Operation (Fetch all users)
+// C. READ Operation (Fetch all users including inactive)
 $search_query = $_GET['search'] ?? '';
-$sql = "SELECT User_ID, Name, Email, Role, Address FROM Users";
+$sql = "SELECT User_ID, Name, Email, Role, Address, is_active FROM Users";
 
 $where_clause = '';
 $params = [];
@@ -102,7 +106,7 @@ if (!empty($search_query)) {
     $params[] = '%' . $search_query . '%';
 }
 
-$sql .= $where_clause . " ORDER BY Role DESC, Name ASC";
+$sql .= $where_clause . " ORDER BY is_active ASC, Role DESC, Name ASC";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -179,13 +183,14 @@ include '../includes/sidebar.php';
                                 <th style="width: 25%">Name</th>
                                 <th style="width: 30%">Email</th>
                                 <th style="width: 15%">Role</th>
-                                <th style="width: 25%" class="text-center">Actions</th>
+                                <th style="width: 10%">Status</th>
+                                <th style="width: 20%" class="text-center">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if (count($users) == 0): ?>
                                 <tr>
-                                    <td colspan="5" class="text-center text-muted">No users found.</td>
+                                    <td colspan="6" class="text-center text-muted">No users found.</td>
                                 </tr>
                             <?php endif; ?>
                             <?php foreach ($users as $u): ?>
@@ -194,32 +199,36 @@ include '../includes/sidebar.php';
                                 <td><?php echo $u['Name']; ?></td>
                                 <td><?php echo $u['Email']; ?></td>
                                 <td>
-                                    <?php 
+                                    <?php
                                     if ($u['Role'] == 'admin'):
                                         echo 'Admin';
                                     else:
-                                        // Covers 'employee' (old data) and 'user' (new form data)
                                         echo 'User';
                                     endif;
                                     ?>
                                 </td>
+                                <td>
+                                    <?php if ($u['is_active']): ?>
+                                        <span class="badge bg-success">Active</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="text-center">
-                                    <!-- <button class="btn btn-sm btn-info text-white me-1" 
-                                             data-bs-toggle="modal" 
-                                             data-bs-target="#editModal"
-                                             data-id="<?php echo $u['User_ID']; ?>"
-                                             data-name="<?php echo htmlspecialchars($u['Name']); ?>"
-                                             data-email="<?php echo htmlspecialchars($u['Email']); ?>"
-                                             data-address="<?php echo htmlspecialchars($u['Address']); ?>"
-                                             data-role="<?php echo htmlspecialchars($u['Role']); ?>">
-                                             <i class="fas fa-edit"></i> Edit
-                                    </button> -->
-                                    <a href="users.php?delete_id=<?php echo $u['User_ID']; ?>" 
-                                       class="btn btn-sm btn-danger"
-                                       onclick="return confirm('WARNING: Deleting user <?php echo $u['Name']; ?> is permanent. Are you sure?');"
-                                       <?php echo ($u['User_ID'] == $_SESSION['user_id']) ? 'disabled' : ''; ?>>
-                                         <i class="fas fa-trash"></i> Delete
-                                    </a>
+                                    <?php if ($u['is_active']): ?>
+                                        <a href="users.php?toggle_id=<?php echo $u['User_ID']; ?>"
+                                           class="btn btn-sm btn-warning"
+                                           onclick="return confirm('Deactivate user <?php echo $u['Name']; ?>?');"
+                                           <?php echo ($u['User_ID'] == $_SESSION['user_id']) ? 'disabled' : ''; ?>>
+                                            <i class="fas fa-ban"></i> Deactivate
+                                        </a>
+                                    <?php else: ?>
+                                        <a href="users.php?toggle_id=<?php echo $u['User_ID']; ?>"
+                                           class="btn btn-sm btn-success"
+                                           onclick="return confirm('Activate user <?php echo $u['Name']; ?>?');">
+                                            <i class="fas fa-check"></i> Activate
+                                        </a>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                             <?php endforeach; ?>

@@ -5,7 +5,7 @@ function verifyLogin($email, $password) {
     $pdo = connectDB();
     
     // Use prepared statements for secure login
-    $stmt = $pdo->prepare("SELECT User_ID, Password, Role FROM Users WHERE Email = :email");
+    $stmt = $pdo->prepare("SELECT User_ID, Password, Role, is_active FROM Users WHERE Email = :email");
     $stmt->bindParam(':email', $email);
     $stmt->execute();
     $user = $stmt->fetch();
@@ -13,6 +13,9 @@ function verifyLogin($email, $password) {
     if ($user) {
         // Securely compare the submitted password against the stored hash
         if (password_verify($password, $user['Password'])) {
+            if (!$user['is_active']) {
+                return "Your account has been deactivated. Please contact admin.";
+            }
             // Login successful
             session_start();
             $_SESSION['user_id'] = $user['User_ID'];

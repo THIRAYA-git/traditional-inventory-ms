@@ -94,7 +94,7 @@ include '../includes/sidebar.php';
     /* Main layout adjustment */
     .main-content {
         margin-left: 280px;
-        padding: 30px;
+        padding: 20px;
         background-color: var(--profile-bg);
         min-height: 100vh;
         transition: background-color 0.3s ease;
@@ -111,51 +111,57 @@ include '../includes/sidebar.php';
     }
     .profile-header-bg {
         background: linear-gradient(135deg, #2193b0 0%, #6dd5ed 100%);
-        height: 120px;
+        height: 60px;
         border-radius: 15px 15px 0 0;
     }
     .avatar-container {
-        margin-top: -60px;
+        margin-top: -40px;
         position: relative;
         display: inline-block;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
     }
     .avatar-preview {
-        width: 130px;
-        height: 130px;
+        width: 90px;
+        height: 90px;
         border-radius: 50%;
-        border: 5px solid var(--profile-card);
+        border: 4px solid var(--profile-card);
         object-fit: cover;
         box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     .upload-badge {
         position: absolute;
-        bottom: 5px;
-        right: 5px;
+        bottom: 2px;
+        right: 2px;
         background: #2193b0;
         color: white;
-        width: 35px;
-        height: 35px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        border: 3px solid var(--profile-card);
+        border: 2px solid var(--profile-card);
+    }
+    .upload-badge i {
+        font-size: 0.7rem;
+        vertical-align: middle;
+        margin-top: 4px;
     }
     .form-label {
         font-weight: 600;
         color: var(--profile-text);
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
-        margin-bottom: 5px;
+        margin-bottom: 3px;
     }
     .form-control-custom {
-        border-radius: 8px;
-        padding: 12px 15px;
+        border-radius: 6px;
+        padding: 8px 12px;
         border: 1px solid var(--profile-border);
         background-color: var(--profile-input-bg);
         color: var(--profile-text);
+        font-size: 0.9rem;
         transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
     }
     .form-control-custom:read-only {
@@ -166,21 +172,22 @@ include '../includes/sidebar.php';
         color: var(--profile-text-muted);
     }
 
-    .page-title { color: var(--profile-text); }
+    .page-title { color: var(--profile-text); font-size: 1.2rem; }
     .page-subtitle { color: var(--profile-text-muted); }
-    .user-name { color: var(--profile-text); }
-    .user-email { color: var(--profile-text-muted); }
+    .user-name { color: var(--profile-text); font-size: 1rem; }
+    .user-email { color: var(--profile-text-muted); font-size: 0.85rem; }
     .divider { border-color: var(--profile-border); }
+    .my-4 { margin-top: 1rem !important; margin-bottom: 1rem !important; }
 </style>
 
 <div class="main-content">
     <div class="container-fluid">
         <div class="row justify-content-center">
-            <div class="col-xl-6 col-lg-8">
+            <div class="col-xl-8 col-lg-10">
                 
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <h3 class="fw-bold mb-0 page-title">User Settings</h3>
-                    <span class="badge rounded-pill bg-info text-dark px-3 py-2">Employee Portal</span>
+                    <span class="badge rounded-pill bg-info text-dark px-2 py-1 small">Employee Portal</span>
                 </div>
 
                 <?php echo $message; ?>
@@ -237,16 +244,16 @@ include '../includes/sidebar.php';
                             <hr class="my-4 divider opacity-25">
 
                             <div id="viewButtons" class="text-center" style="<?php echo $edit_mode ? 'display: none;' : ''; ?>">
-                                <button type="button" class="btn btn-primary px-5 py-2 fw-bold rounded-pill" id="editBtn">
-                                    <i class="fas fa-user-edit me-2"></i>Edit Profile
+                                <button type="button" class="btn btn-primary px-4 py-1 fw-bold rounded-pill" id="editBtn">
+                                    <i class="fas fa-user-edit me-1"></i>Edit Profile
                                 </button>
                             </div>
 
                             <div id="editButtons" class="text-center" style="<?php echo $edit_mode ? '' : 'display: none;'; ?>">
-                                <button type="submit" name="save_profile" class="btn btn-success px-4 py-2 fw-bold rounded-pill me-2">
+                                <button type="submit" name="save_profile" class="btn btn-success px-3 py-1 fw-bold rounded-pill me-2">
                                     Save Changes
                                 </button>
-                                <button type="button" class="btn btn-light px-4 py-2 rounded-pill shadow-sm" id="cancelBtn">
+                                <button type="button" class="btn btn-light px-3 py-1 rounded-pill shadow-sm" id="cancelBtn">
                                     Cancel
                                 </button>
                             </div>

@@ -122,7 +122,7 @@ cp -r traditional-inventory-ms/ /xampp/htdocs/
 ### Default Login
 | Role | Email | Password |
 |---|---|---|
-| Admin | admin@gmail.com | *(set during setup)* |
+| Admin | admin@gmail.com | admin123 |
 
 ---
 

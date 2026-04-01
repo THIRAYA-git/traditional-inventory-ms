@@ -194,8 +194,11 @@ include '../includes/sidebar.php';
                                 <div class="avatar-container">
                                     <img src="<?php echo $profile_img_path; ?>" id="avatarImage" class="avatar-preview">
                                     <label for="profile_pic" class="upload-badge" id="uploadBtnArea" style="<?php echo $edit_mode ? '' : 'display: none;'; ?>">
-                                        <i class="fas fa-camera"></i>
+                                        <i class="fas fa-camera" style="vertical-align: middle; margin-top: 6px;"></i>
                                     </label>
+
+                                        
+
                                     <input type="file" id="profile_pic" name="profile_pic" hidden accept="image/*">
                                 </div>
                                 <h4 class="fw-bold mb-1 user-name"><?php echo htmlspecialchars($user['Name']); ?></h4>

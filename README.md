@@ -123,6 +123,7 @@ cp -r traditional-inventory-ms/ /xampp/htdocs/
 | Role | Email | Password |
 |---|---|---|
 | Admin | admin@gmail.com | admin123 |
+| Employee | arif@gmail.com | user1 |
 
 ---
 
